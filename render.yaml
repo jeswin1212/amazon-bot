@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: amazon-bot
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: bot.py  # Replace 'your_script_name.py' with the actual name of your Python file
+    envVars:
+      - key: TELEGRAM_BOT_TOKEN
+        value: "7807178711:AAGoL1uZVx_X6BQH34z7nIL7f6hUNvz8I5Y"
+      - key: AFFILIATE_TAG
+        value: "junodeals-21"
+      - key: CHANNEL_ID
+        value: "@junodeals"  # Replace with your channel ID or username
