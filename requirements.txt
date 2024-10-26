@@ -1,4 +1,4 @@
 python-telegram-bot==21.6
-beautifulsoup4==2.6
+beautifulsoup4==4.12.3  # Replace with the latest version
 requests==2.32.3
-Flask==2.3.2
+Flask==2.3.2  # or the latest version
