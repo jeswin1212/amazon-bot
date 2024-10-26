@@ -4,7 +4,7 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
 # Telegram bot token and affiliate tag
-bot_token = "7807178711:AAGoL1uZVx_X6BQH34z7nIL7f6hUNvz8I5Y"
+bot_token = "7807178711:AAHYiDVJmJd__w8kd_3XSa2tcf2-h-nh-xY"
 affiliate_tag = "junodeals-21"
 channel_id = "@junodeals"  # Replace with your channel ID or username
 
