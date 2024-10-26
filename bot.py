@@ -37,6 +37,7 @@ async def fetch_amazon_details(amazon_url):
         async with httpx.AsyncClient() as client:
             response = await client.get(amazon_url, headers=headers)
             response.raise_for_status()
+            logger.info(f"Fetched content: {response.content[:200]}")  # Log first 200 characters
             soup = BeautifulSoup(response.content, 'html.parser')
     except Exception as e:
         logger.error(f"Error fetching product details: {e}")
@@ -61,7 +62,7 @@ async def fetch_amazon_details(amazon_url):
         mrp = "N/A"
 
     try:
-        current_price = soup.find("span", class_="aok-offscreen").get_text(strip=True).split(' ')[0]
+        current_price = soup.find("span", class_="a-price a-text-price a-size-medium apexPriceToPay").get_text(strip=True).split(' ')[0]
     except AttributeError:
         current_price = "N/A"
 
@@ -89,12 +90,16 @@ async def fetch_amazon_details(amazon_url):
 @app.route(f"/{bot_token}", methods=["POST"])
 async def webhook():
     update = Update.de_json(request.get_json(force=True), bot)
-
     user_message = update.message.text
     logger.info(f"Received message: {user_message}")
 
     # Check for valid Amazon URLs in the message
+    if user_message.startswith('/start'):
+        bot.send_message(chat_id=update.message.chat.id, text="Welcome! Send me an Amazon link to get started.")
+        return "ok", 200
+
     if is_valid_amazon_url(user_message):
+        logger.info("Valid Amazon URL detected.")
         amazon_details = await fetch_amazon_details(user_message)  # Await the fetch function
         logger.info(f"Fetched Amazon details: {amazon_details}")
 
