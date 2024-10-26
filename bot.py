@@ -5,6 +5,7 @@ from telegram import Update, Bot
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from flask import Flask, request
 import logging
+import re
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -17,6 +18,11 @@ channel_id = "@junodeals"  # Replace with your channel ID or username
 
 app = Flask(__name__)
 bot = Bot(token=bot_token)
+
+# Function to validate Amazon URLs
+def is_valid_amazon_url(url):
+    amazon_url_pattern = r'https?://(www\.)?(amazon\.(com|in|co\.uk|ca|de|fr|it|es|jp|com\.br)/.+|amazon\..+\.com/.+)'
+    return re.match(amazon_url_pattern, url) is not None
 
 # Function to convert Amazon URL to affiliate link and fetch details via scraping
 async def fetch_amazon_details(amazon_url):
@@ -86,7 +92,8 @@ def webhook():
     user_message = update.message.text
     logger.info(f"Received message: {user_message}")
 
-    if "amazon" in user_message.lower():
+    # Check for valid Amazon URLs in the message
+    if is_valid_amazon_url(user_message):
         amazon_details = fetch_amazon_details(user_message)  # This should be synchronous
         logger.info(f"Fetched Amazon details: {amazon_details}")
 
@@ -102,13 +109,14 @@ def webhook():
         bot.send_message(chat_id=update.message.chat_id, text=response_message, parse_mode='Markdown')
         bot.send_message(channel_id, response_message, parse_mode='Markdown')
     else:
-        logger.info("Message did not contain 'amazon', ignoring.")
+        logger.info("No valid Amazon link found in the message.")
+        bot.send_message(chat_id=update.message.chat_id, text="Please send a valid Amazon link.")
 
     return "ok", 200
 
 if __name__ == "__main__":
     # Set your webhook
-    webhook_url = f"https://https://amazon-bot-g2rm.onrender.com/{bot_token}"  # Replace with your Render URL
+    webhook_url = f"https://amazon-bot-g2rm.onrender.com/{bot_token}"  # Replace with your Render URL
     httpx.get(f"https://api.telegram.org/bot{bot_token}/setWebhook?url={webhook_url}")
 
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
