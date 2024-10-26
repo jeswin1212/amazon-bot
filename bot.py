@@ -6,6 +6,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from flask import Flask, request
 import logging
 import re
+import asyncio
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -86,7 +87,7 @@ async def fetch_amazon_details(amazon_url):
     }
 
 @app.route(f"/{bot_token}", methods=["POST"])
-def webhook():
+async def webhook():
     update = Update.de_json(request.get_json(force=True), bot)
 
     user_message = update.message.text
@@ -94,7 +95,7 @@ def webhook():
 
     # Check for valid Amazon URLs in the message
     if is_valid_amazon_url(user_message):
-        amazon_details = fetch_amazon_details(user_message)  # This should be synchronous
+        amazon_details = await fetch_amazon_details(user_message)  # Await the fetch function
         logger.info(f"Fetched Amazon details: {amazon_details}")
 
         response_message = (
@@ -106,11 +107,11 @@ def webhook():
             f"**Best Buy**: [Buy Now]({amazon_details['affiliate_link']})"
         )
 
-        bot.send_message(chat_id=update.message.chat_id, text=response_message, parse_mode='Markdown')
+        bot.send_message(chat_id=update.message.chat.id, text=response_message, parse_mode='Markdown')
         bot.send_message(channel_id, response_message, parse_mode='Markdown')
     else:
         logger.info("No valid Amazon link found in the message.")
-        bot.send_message(chat_id=update.message.chat_id, text="Please send a valid Amazon link.")
+        bot.send_message(chat_id=update.message.chat.id, text="Please send a valid Amazon link.")
 
     return "ok", 200
 
