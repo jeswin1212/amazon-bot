@@ -3,7 +3,6 @@ import httpx
 from bs4 import BeautifulSoup
 from telegram import Update
 from telegram.ext import Application, MessageHandler, filters
-from flask import Flask
 import asyncio
 import logging
 
@@ -15,13 +14,6 @@ logger = logging.getLogger(__name__)
 bot_token = "7807178711:AAGHXP7iHfj7WIQl5gQZvFyCjsGb3k8hNXc"  # Replace with your bot token
 affiliate_tag = "junodeals-21"
 channel_id = "@junodeals"  # Replace with your channel ID or username
-
-# Initialize Flask app
-app = Flask(__name__)
-
-@app.route("/")
-def health_check():
-    return "Bot is running!", 200
 
 # Function to convert Amazon URL to affiliate link and fetch details via scraping
 async def fetch_amazon_details(amazon_url):
@@ -89,8 +81,11 @@ async def fetch_amazon_details(amazon_url):
 # Function to handle messages
 async def handle_message(update: Update, context):
     user_message = update.message.text
+    logger.info(f"Received message: {user_message}")
+
     if "amazon" in user_message.lower():  # Check if the message contains "amazon"
         amazon_details = await fetch_amazon_details(user_message)  # Await the fetch function
+        logger.info(f"Fetched Amazon details: {amazon_details}")
 
         response_message = (
             f"**Product Name**: {amazon_details['product_name']}\n"
@@ -106,6 +101,8 @@ async def handle_message(update: Update, context):
 
         # Forward the original message to the channel
         await context.bot.send_message(channel_id, response_message, parse_mode='Markdown')
+    else:
+        logger.info("Message did not contain 'amazon', ignoring.")
 
 # Main function to set up handlers and run the application
 async def main():
@@ -124,4 +121,3 @@ async def main():
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     loop.create_task(main())
-    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))  # Bind to the port
