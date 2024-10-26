@@ -108,11 +108,5 @@ async def main():
 
 # Check if the script is executed directly
 if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except RuntimeError as e:
-        if str(e) == "This event loop is already running":
-            loop = asyncio.get_event_loop()
-            loop.create_task(main())
-        else:
-            raise
+    loop = asyncio.get_event_loop()
+    loop.create_task(main())
