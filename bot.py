@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
+import asyncio
 
 # Telegram bot token and affiliate tag
 bot_token = "7807178711:AAHYiDVJmJd__w8kd_3XSa2tcf2-h-nh-xY"
@@ -80,7 +81,7 @@ async def handle_message(update: Update, context):
         # Forward the original message to the channel
         await context.bot.send_message(channel_id, response_message, parse_mode='Markdown')
 
-# Main function to set up handlers
+# Main function to set up handlers and run the application
 async def main():
     # Create an application
     application = Application.builder().token(bot_token).build()
@@ -91,7 +92,13 @@ async def main():
     # Start the bot
     await application.run_polling()
 
+# Check if the script is executed directly
 if __name__ == "__main__":
-    import asyncio
-    # Directly calling the main function without asyncio.run()
-    asyncio.get_event_loop().run_until_complete(main())
+    # Use asyncio.run() but in a way compatible with the existing loop
+    try:
+        asyncio.run(main())
+    except RuntimeError as e:
+        if str(e) == "This event loop is already running":
+            # Run the main function directly without asyncio.run
+            loop = asyncio.get_event_loop()
+            loop.create_task(main())
