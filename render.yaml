@@ -5,7 +5,7 @@ services:
     env: python
     plan: free
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "bot.py"
+    startCommand: "python bot.py"  # Updated to include "python"
     envVars:
       - key: BOT_TOKEN
         value: "7807178711:AAGoL1uZVx_X6BQH34z7nIL7f6hUNvz8I5Y"
