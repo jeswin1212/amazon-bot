@@ -3,12 +3,25 @@ import httpx
 from bs4 import BeautifulSoup
 from telegram import Update
 from telegram.ext import Application, MessageHandler, filters
+from flask import Flask
 import asyncio
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Telegram bot token and affiliate tag
 bot_token = "7807178711:AAHYiDVJmJd__w8kd_3XSa2tcf2-h-nh-xY"  # Replace with your bot token
 affiliate_tag = "junodeals-21"
 channel_id = "@junodeals"  # Replace with your channel ID or username
+
+# Initialize Flask app
+app = Flask(__name__)
+
+@app.route("/")
+def health_check():
+    return "Bot is running!", 200
 
 # Function to convert Amazon URL to affiliate link and fetch details via scraping
 async def fetch_amazon_details(amazon_url):
@@ -26,6 +39,7 @@ async def fetch_amazon_details(amazon_url):
             response.raise_for_status()  # Raise an error for bad responses
             soup = BeautifulSoup(response.content, 'html.parser')
     except Exception as e:
+        logger.error(f"Error fetching product details: {e}")
         return {
             "product_name": "Error fetching product details",
             "mrp": "N/A",
@@ -110,3 +124,4 @@ async def main():
 if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     loop.create_task(main())
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)))  # Bind to the port
