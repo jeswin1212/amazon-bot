@@ -92,6 +92,6 @@ async def main():
     await application.run_polling()
 
 if __name__ == "__main__":
-    # Call the main function directly
     import asyncio
-    asyncio.run(main())
+    # Directly calling the main function without asyncio.run()
+    asyncio.get_event_loop().run_until_complete(main())
