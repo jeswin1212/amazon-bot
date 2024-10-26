@@ -80,14 +80,14 @@ async def fetch_amazon_details(amazon_url):
     }
 
 @app.route(f"/{bot_token}", methods=["POST"])
-async def webhook():
+def webhook():
     update = Update.de_json(request.get_json(force=True), bot)
 
     user_message = update.message.text
     logger.info(f"Received message: {user_message}")
 
     if "amazon" in user_message.lower():
-        amazon_details = await fetch_amazon_details(user_message)
+        amazon_details = fetch_amazon_details(user_message)  # This should be synchronous
         logger.info(f"Fetched Amazon details: {amazon_details}")
 
         response_message = (
@@ -99,8 +99,8 @@ async def webhook():
             f"**Best Buy**: [Buy Now]({amazon_details['affiliate_link']})"
         )
 
-        await bot.send_message(chat_id=update.message.chat_id, text=response_message, parse_mode='Markdown')
-        await bot.send_message(channel_id, response_message, parse_mode='Markdown')
+        bot.send_message(chat_id=update.message.chat_id, text=response_message, parse_mode='Markdown')
+        bot.send_message(channel_id, response_message, parse_mode='Markdown')
     else:
         logger.info("Message did not contain 'amazon', ignoring.")
 
