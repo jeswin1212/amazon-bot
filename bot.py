@@ -1,9 +1,9 @@
 import os
 import httpx
 from bs4 import BeautifulSoup
-from telegram import Update
-from telegram.ext import Application, MessageHandler, filters
-import asyncio
+from telegram import Update, Bot
+from telegram.ext import Application, CommandHandler, MessageHandler, filters
+from flask import Flask, request
 import logging
 
 # Configure logging
@@ -15,9 +15,11 @@ bot_token = "7807178711:AAGHXP7iHfj7WIQl5gQZvFyCjsGb3k8hNXc"  # Replace with you
 affiliate_tag = "junodeals-21"
 channel_id = "@junodeals"  # Replace with your channel ID or username
 
+app = Flask(__name__)
+bot = Bot(token=bot_token)
+
 # Function to convert Amazon URL to affiliate link and fetch details via scraping
 async def fetch_amazon_details(amazon_url):
-    # Convert the Amazon URL to an affiliate link
     affiliate_link = f"{amazon_url}?tag={affiliate_tag}"
 
     headers = {
@@ -25,10 +27,9 @@ async def fetch_amazon_details(amazon_url):
     }
 
     try:
-        # Fetch the Amazon page asynchronously
         async with httpx.AsyncClient() as client:
             response = await client.get(amazon_url, headers=headers)
-            response.raise_for_status()  # Raise an error for bad responses
+            response.raise_for_status()
             soup = BeautifulSoup(response.content, 'html.parser')
     except Exception as e:
         logger.error(f"Error fetching product details: {e}")
@@ -41,7 +42,7 @@ async def fetch_amazon_details(amazon_url):
             "affiliate_link": affiliate_link
         }
 
-    # Scrape the product details
+    # Scrape product details
     try:
         product_name = soup.find(id="productTitle").get_text(strip=True)
     except AttributeError:
@@ -53,7 +54,7 @@ async def fetch_amazon_details(amazon_url):
         mrp = "N/A"
 
     try:
-        current_price = soup.find("span", class_="aok-offscreen").get_text(strip=True).split(' ')[0]  # Taking only the price part
+        current_price = soup.find("span", class_="aok-offscreen").get_text(strip=True).split(' ')[0]
     except AttributeError:
         current_price = "N/A"
 
@@ -78,13 +79,15 @@ async def fetch_amazon_details(amazon_url):
         "affiliate_link": affiliate_link
     }
 
-# Function to handle messages
-async def handle_message(update: Update, context):
+@app.route(f"/{bot_token}", methods=["POST"])
+async def webhook():
+    update = Update.de_json(request.get_json(force=True), bot)
+
     user_message = update.message.text
     logger.info(f"Received message: {user_message}")
 
-    if "amazon" in user_message.lower():  # Check if the message contains "amazon"
-        amazon_details = await fetch_amazon_details(user_message)  # Await the fetch function
+    if "amazon" in user_message.lower():
+        amazon_details = await fetch_amazon_details(user_message)
         logger.info(f"Fetched Amazon details: {amazon_details}")
 
         response_message = (
@@ -96,28 +99,16 @@ async def handle_message(update: Update, context):
             f"**Best Buy**: [Buy Now]({amazon_details['affiliate_link']})"
         )
 
-        # Send the response back to the user
-        await update.message.reply_text(response_message, parse_mode='Markdown')
-
-        # Forward the original message to the channel
-        await context.bot.send_message(channel_id, response_message, parse_mode='Markdown')
+        await bot.send_message(chat_id=update.message.chat_id, text=response_message, parse_mode='Markdown')
+        await bot.send_message(channel_id, response_message, parse_mode='Markdown')
     else:
         logger.info("Message did not contain 'amazon', ignoring.")
 
-# Main function to set up handlers and run the application
-async def main():
-    # Create an application
-    application = Application.builder().token(bot_token).build()
+    return "ok", 200
 
-    # Handle text messages
-    application.add_handler(MessageHandler(filters.TEXT, handle_message))
-
-    # Start the bot
-    await application.initialize()  # Await the initialization
-    await application.run_polling()  # Use the default settings for run_polling
-    await application.shutdown()  # Await the shutdown
-
-# Check if the script is executed directly
 if __name__ == "__main__":
-    loop = asyncio.get_event_loop()
-    loop.create_task(main())
+    # Set your webhook
+    webhook_url = f"https://YOUR_RENDER_URL/{bot_token}"  # Replace with your Render URL
+    httpx.get(f"https://api.telegram.org/bot{bot_token}/setWebhook?url={webhook_url}")
+
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
