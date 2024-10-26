@@ -108,7 +108,7 @@ def webhook():
 
 if __name__ == "__main__":
     # Set your webhook
-    webhook_url = f"https://YOUR_RENDER_URL/{bot_token}"  # Replace with your Render URL
+    webhook_url = f"https://https://amazon-bot-g2rm.onrender.com/{bot_token}"  # Replace with your Render URL
     httpx.get(f"https://api.telegram.org/bot{bot_token}/setWebhook?url={webhook_url}")
 
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
