@@ -5,7 +5,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters
 import asyncio
 
 # Telegram bot token and affiliate tag
-bot_token = "7807178711:AAHYiDVJmJd__w8kd_3XSa2tcf2-h-nh-xY"
+bot_token = "7807178711:AAHYiDVJmJd__w8kd_3XSa2tcf2-h-nh-xY"  # Replace with your bot token
 affiliate_tag = "junodeals-21"
 channel_id = "@junodeals"  # Replace with your channel ID or username
 
@@ -90,7 +90,9 @@ async def main():
     application.add_handler(MessageHandler(filters.TEXT, handle_message))
 
     # Start the bot
+    await application.initialize()  # Await the initialization
     await application.run_polling()
+    await application.shutdown()  # Await the shutdown
 
 # Check if the script is executed directly
 if __name__ == "__main__":
