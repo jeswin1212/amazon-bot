@@ -1,4 +1,5 @@
-import requests
+import os
+import httpx
 from bs4 import BeautifulSoup
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
@@ -10,7 +11,7 @@ affiliate_tag = "junodeals-21"
 channel_id = "@junodeals"  # Replace with your channel ID or username
 
 # Function to convert Amazon URL to affiliate link and fetch details via scraping
-def fetch_amazon_details(amazon_url):
+async def fetch_amazon_details(amazon_url):
     # Convert the Amazon URL to an affiliate link
     affiliate_link = f"{amazon_url}?tag={affiliate_tag}"
     
@@ -18,9 +19,21 @@ def fetch_amazon_details(amazon_url):
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
     }
     
-    # Fetch the Amazon page
-    response = requests.get(amazon_url, headers=headers)
-    soup = BeautifulSoup(response.content, 'html.parser')
+    try:
+        # Fetch the Amazon page asynchronously
+        async with httpx.AsyncClient() as client:
+            response = await client.get(amazon_url, headers=headers)
+            response.raise_for_status()  # Raise an error for bad responses
+            soup = BeautifulSoup(response.content, 'html.parser')
+    except Exception as e:
+        return {
+            "product_name": "Error",
+            "mrp": "Error",
+            "current_price": "Error",
+            "offer": "Error",
+            "discount": "Error",
+            "affiliate_link": affiliate_link
+        }
     
     # Scrape the product details
     try:
@@ -62,9 +75,8 @@ def fetch_amazon_details(amazon_url):
 # Function to handle messages
 async def handle_message(update: Update, context):
     user_message = update.message.text
-    if "amazon" in user_message:
-        # If an Amazon link is found
-        amazon_details = fetch_amazon_details(user_message)
+    if "amazon" in user_message.lower():  # Check if the message contains "amazon"
+        amazon_details = await fetch_amazon_details(user_message)  # Await the fetch function
         
         response_message = (
             f"**Product Name**: {amazon_details['product_name']}\n"
