@@ -1,10 +1,10 @@
 import requests
 from bs4 import BeautifulSoup
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram.ext import Application, CommandHandler, MessageHandler, filters
 
 # Telegram bot token and affiliate tag
-bot_token = "7807178711:AAGoL1uZVx_X6BQH34z7nIL7f6hUNvz8I5Y"  # Replace with your bot token
+bot_token = "7807178711:AAGoL1uZVx_X6BQH34z7nIL7f6hUNvz8I5Y"
 affiliate_tag = "junodeals-21"
 channel_id = "@junodeals"  # Replace with your channel ID or username
 
@@ -19,10 +19,6 @@ def fetch_amazon_details(amazon_url):
     
     # Fetch the Amazon page
     response = requests.get(amazon_url, headers=headers)
-    
-    if response.status_code != 200:
-        return {"error": "Failed to fetch the Amazon page."}
-
     soup = BeautifulSoup(response.content, 'html.parser')
     
     # Scrape the product details
@@ -63,21 +59,18 @@ def fetch_amazon_details(amazon_url):
     }
 
 # Function to handle messages
-async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def handle_message(update: Update, context):
     user_message = update.message.text
     if "amazon" in user_message:
         # If an Amazon link is found
         amazon_details = fetch_amazon_details(user_message)
-
-        if "error" in amazon_details:
-            await update.message.reply_text(amazon_details["error"])
-            return
         
         response_message = (
-            f"**Grab 🔥**: {amazon_details['product_name']}\n"
-            f"**MRP ❌**: {amazon_details['mrp']}  "
-            f"**Current Price ✔️**: {amazon_details['current_price']}\n"
+            f"**Product Name**: {amazon_details['product_name']}\n"
+            f"**MRP**: {amazon_details['mrp']}\n"
+            f"**Current Price**: {amazon_details['current_price']}\n"
             f"**Discount**: {amazon_details['discount']}\n"
+            f"**Offers**: {amazon_details['offer']}\n"
             f"**Best Buy**: [Buy Now]({amazon_details['affiliate_link']})"
         )
         
