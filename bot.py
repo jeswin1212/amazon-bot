@@ -89,8 +89,9 @@ async def main():
     application.add_handler(MessageHandler(filters.TEXT, handle_message))
 
     # Start the bot
-    await application.run_polling()  # Updated method
+    await application.run_polling()
 
 if __name__ == "__main__":
+    # Call the main function directly
     import asyncio
     asyncio.run(main())
